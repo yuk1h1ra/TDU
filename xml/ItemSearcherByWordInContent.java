@@ -22,7 +22,7 @@ public class ItemSearcherByWordInContent {
             // ↑↑↑  ここまでは DocumentViewer と同じ (クラス名以外は)
             // ツリーをroot要素からたどる
             // viewer.showTree(document.getDocumentElement());
-            String word = "逮捕";
+            String word = "日";
             // まずitem要素のリストを得る
             NodeList list = document.getElementsByTagName("item");
             for(int i = 0; i < list.getLength(); i++) {	// 各item要素について
