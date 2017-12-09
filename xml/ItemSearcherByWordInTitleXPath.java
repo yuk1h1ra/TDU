@@ -10,6 +10,8 @@ import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSParser;
 
+import javax.xml.xpath.*;
+
 public class ItemSearcherByWordInTitleXPath {
     public static void main(String[] args) {
         ItemSearcherByWordInTitleXPath viewer = new ItemSearcherByWordInTitleXPath();
@@ -22,35 +24,12 @@ public class ItemSearcherByWordInTitleXPath {
             // DOMツリーの構築
             Document document = viewer.buildDocument(inputStream, "utf-8");
             // ↑↑↑  ここまでは DocumentViewer と同じ (クラス名以外は)
-            // ツリーをroot要素からたどる
-            // viewer.showTree(document.getDocumentElement());
-            String word = "首相";
-            // まずitem要素のリストを得る
-            NodeList list = document.getElementsByTagName("item");
-            for(int i = 0; i < list.getLength(); i++) {	// 各item要素について
-                Node  node= list.item(i);
-                String title = null;
-                String link = null;
-                for(Node current = node.getFirstChild();
-                        current != null;
-                        current = current.getNextSibling()) {	// 1つのitem要素の各子ノードについて
-                    if(current.getNodeType() == Node.ELEMENT_NODE) {
-                        if(current.getNodeName().equals("title")) {
-                            //title = current.getTextContent();
-                            title = current.getFirstChild().getNodeValue();
-                        }
-                        else if(current.getNodeName().equals("link")) {
-                            link = current.getTextContent();
-                        }
-                        // title, link 以外の要素の場合には何もしない
-                    }
-                    // 要素以外 (テキストなど) の場合には何もしない
-                }
-                if(title.contains(word)) {		// 指定された語 word が title 要素に含まれていたら
-                    System.out.println(title);
-                    System.out.println(link);
-                    System.out.println();
-                }
+            XPathFactory factory = XPathFactory.newInstance();
+            XPath xPath = factory.newXPath();
+            NodeList itemNodeList = (NodeList)xPath.evaluate("/feed/entry/title/text()", document, XPathConstants.NODESET);
+
+            for(int i = 0; i < itemNodeList.getLength(); i++) {
+                System.out.println(itemNodeList.item(i));
             }
         }
         catch (Exception e) {
