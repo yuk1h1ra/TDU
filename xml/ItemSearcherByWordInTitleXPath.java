@@ -17,7 +17,7 @@ public class ItemSearcherByWordInTitleXPath {
         ItemSearcherByWordInTitleXPath viewer = new ItemSearcherByWordInTitleXPath();
         try {
             // InputStreamの用意
-            URL url = new URL("https://qiita.com/tags/vim/feed.atom");
+            URL url = new URL("https://www.lifehacker.jp/feed/index.xml");
             URLConnection connection = url.openConnection();
             connection.connect();
             InputStream inputStream = connection.getInputStream();
@@ -26,10 +26,19 @@ public class ItemSearcherByWordInTitleXPath {
             // ↑↑↑  ここまでは DocumentViewer と同じ (クラス名以外は)
             XPathFactory factory = XPathFactory.newInstance();
             XPath xPath = factory.newXPath();
-            NodeList itemNodeList = (NodeList)xPath.evaluate("/feed/entry/title/text()", document, XPathConstants.NODESET);
+            NodeList titleNodeList = (NodeList)xPath.evaluate("/rss/channel/item/title", document, XPathConstants.NODESET);
+            NodeList descNodeList = (NodeList)xPath.evaluate("/rss/channel/item/description", document, XPathConstants.NODESET);
 
-            for(int i = 0; i < itemNodeList.getLength(); i++) {
-                System.out.println(itemNodeList.item(i));
+            if(titleNodeList.getLength() == 0) {
+                titleNodeList = (NodeList)xPath.evaluate("/RDF/item/title", document, XPathConstants.NODESET);
+                descNodeList = (NodeList)xPath.evaluate("/RDF/item/description", document, XPathConstants.NODESET);
+            }
+
+            for(int i = 0; i < titleNodeList.getLength(); i++) {
+                if(titleNodeList.item(i).getTextContent().contains("Amazon")) {
+                    System.out.println(titleNodeList.item(i).getTextContent());
+                    System.out.println(descNodeList.item(i).getTextContent());
+                }
             }
         }
         catch (Exception e) {
