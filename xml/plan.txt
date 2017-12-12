@@ -1,0 +1,18 @@
+1. プログラムの概要
+ubuntuから提供されているUbuntu Security Noticesを使用して、
+ローカル開発環境である16.04のバージョンに合うやつをピックアップ
+また、そのパッケージの情報を技術系ブログQiitaから取ってくる
+
+2. 利用するリソースのリスト
+
+2.1 Ubuntu Security Notices
+Ubuntuのセキュリティ上の問題をまとめて報告してくれる
+https://usn.ubuntu.com/usn/rss.xml
+atom形式
+
+2.1 Qiita API
+Qiitaの記事の検索
+これにより、パッケージを面白く使用している技術系ブログが見れる
+そのため、セキュリティも強固になると同時に、そのパッケージに対する知見も得られる
+https://qiita.com/api/v2/items?query=firefox
+
