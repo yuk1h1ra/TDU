@@ -17,21 +17,21 @@ abstract class Token implements Comparable<Token> {
     public static final int DIV = 4;    // /
     public static final int LPAREN = 5; // (
     public static final int RPAREN = 6; // )
-    public static final int OPERAND = 7; // 識別子(変数)または定数
+    public static final int EQUAL = 7;  // =
     public static final int END = 8;    // 終
     // 演算子順位行列
     // トークンを追加する場合には、対応する行と列の両方を追加
     private static final int order[][] = { // [左][右]
-        // 始  +  -  *  /  (  ) 識別子 終 <-右  左
-        {   9, 1, 1, 1, 1, 1, 9, 1,     0 }, // 始
-        {   9,-1,-1, 1, 1, 1,-1, 1,    -1 }, // +
-        {   9,-1,-1, 1, 1, 1,-1, 1,    -1 }, // -
-        {   9,-1,-1,-1,-1, 1,-1, 1,    -1 }, // *
-        {   9,-1,-1,-1,-1, 1,-1, 1,    -1 }, // /
-        {   9, 1, 1, 1, 1, 1, 0, 1,     9 }, // (
-        {   9, 9, 9, 9, 9, 9, 9, 9,     9 }, // )
-        {   9,-1,-1,-1,-1, 9,-1, 9,    -1 }, // 識別子
-        {   9, 9, 9, 9, 9, 9, 9, 9,     9 }, // 終
+        // 始  +  -  *  /  (  )  =  終 <-右  左
+        {   9, 1, 1, 1, 1, 1, 9, 1, 0  }, // 始
+        {   9,-1,-1, 1, 1, 1,-1, 1,-1  }, // +
+        {   9,-1,-1, 1, 1, 1,-1, 1,-1  }, // -
+        {   9,-1,-1,-1,-1, 1,-1, 1,-1  }, // *
+        {   9,-1,-1,-1,-1, 1,-1, 1,-1  }, // /
+        {   9, 1, 1, 1, 1, 1, 0, 1, 9  }, // (
+        {   9, 9, 9, 9, 9, 9, 9, 9, 9  }, // )
+        {   9,-1,-1,-1,-1, 9,-1, 9,-1  }, // =
+        {   9, 9, 9, 9, 9, 9, 9, 9, 9  }, // 終
     };
     // コンストラクタ
     public Token(String string) {
@@ -77,13 +77,12 @@ class TokenFactory {
 }
 
 
-// 特殊記号 ` ; =
+// 特殊記号 ` ;
 class SpecialSymbol extends Token {
     public SpecialSymbol(String string) {
         super(string);
         if     (string.equals("`")) kind = START;
         else if(string.equals(";")) kind = END;
-        // "=" は扱わないので何もしない
     }
 }
 
@@ -184,16 +183,12 @@ class Identifier extends Token {
 
 // プログラム本体
 class Calcurator {
-    // 変数の名前と値の組を格納する HashMap (値は整数限定)
-    private HashMap<String, Integer> symbolMap;
     public Calcurator() {
-        symbolMap = new HashMap<String, Integer>();
-
         System.out.println("式の値を求めます (Ctrl-d で終了)");
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(System.in));
         while(true) {
-            System.out.print("代入文を入力してください: ");
+            System.out.print("式を入力してください: ");
             String line = null;
             try {
                 line = reader.readLine();
@@ -205,11 +200,7 @@ class Calcurator {
                 break;
             // 文字列 line を Token に分解しリストに
             LinkedList<Token> inputList = stringToTokenList(line);
-            // 代入文を仮定しているので先頭は左辺の変数
-            String variableName = inputList.poll().toString();
-            // 次の "=" を取り除いておく
-            inputList.poll();
-            // 右辺 ("=" の次) から逆ポーランド記法に変換
+            // 逆ポーランド記法に変換
             LinkedList<Token> reversePolishList = reverse(inputList);
             // 逆ポーランド記法に変換した結果を表示
             System.out.print("逆ポーランド記法による表現: ");
@@ -218,9 +209,8 @@ class Calcurator {
             System.out.println();
             // 逆ポーランド記法の式の値を計算
             Integer value = calculate(reversePolishList);
-            // 変数に代入
-            symbolMap.put(variableName, value);
-            System.out.println(" " + variableName + " <- " + value);
+            // 式の値を表示
+            System.out.println("value: " + value);
         }
     }
     // 入力された文字列からトークンのリストを生成
@@ -297,14 +287,7 @@ class Calcurator {
             }
             else { // 演算子でも数値でもないものは識別子
                 System.out.println(" 識別子: " + token.toString());
-                // 値を HashMap から求めて push
-                if(symbolMap.containsKey(token.toString())) {
-                    Integer value = symbolMap.get(token.toString());
-                    stack.push(value);
-                }
-                else {
-                    System.err.println(" 未定義: " + token);
-                }
+                // いまのところ何もしない
             }
         }
         // 最終的に stack には計算された値1つが入っている
