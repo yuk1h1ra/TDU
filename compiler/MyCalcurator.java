@@ -18,20 +18,22 @@ abstract class Token implements Comparable<Token> {
     public static final int LPAREN = 5; // (
     public static final int RPAREN = 6; // )
     public static final int EQUAL = 7;  // =
-    public static final int END = 8;    // 終
+    public static final int OPERAND = 8;// 識別子(変数)または定数
+    public static final int END = 9;    // 終
     // 演算子順位行列
     // トークンを追加する場合には、対応する行と列の両方を追加
     private static final int order[][] = { // [左][右]
-        // 始  +  -  *  /  (  )  =  終 <-右  左
-        {   9, 1, 1, 1, 1, 1, 9, 1, 0  }, // 始
-        {   9,-1,-1, 1, 1, 1,-1, 1,-1  }, // +
-        {   9,-1,-1, 1, 1, 1,-1, 1,-1  }, // -
-        {   9,-1,-1,-1,-1, 1,-1, 1,-1  }, // *
-        {   9,-1,-1,-1,-1, 1,-1, 1,-1  }, // /
-        {   9, 1, 1, 1, 1, 1, 0, 1, 9  }, // (
-        {   9, 9, 9, 9, 9, 9, 9, 9, 9  }, // )
-        {   9,-1,-1,-1,-1, 9,-1, 9,-1  }, // =
-        {   9, 9, 9, 9, 9, 9, 9, 9, 9  }, // 終
+        // 始  +  -  *  /  (  )  =  識別子 終 <-右  左
+        {   9, 1, 1, 1, 1, 1, 9, 1, 1,     0 }, // 始
+        {   9,-1,-1, 1, 1, 1,-1,-1, 1,    -1 }, // +
+        {   9,-1,-1, 1, 1, 1,-1,-1, 1,    -1 }, // -
+        {   9,-1,-1,-1,-1, 1,-1,-1, 1,    -1 }, // *
+        {   9,-1,-1,-1,-1, 1,-1,-1, 1,    -1 }, // /
+        {   9, 1, 1, 1, 1, 1, 0, 9, 1,     9 }, // (
+        {   9, 9, 9, 9, 9, 9, 9, 9, 9,     9 }, // )
+        {   9, 1, 1, 1, 1, 1, 9, 9, 1,    -1 }, // =
+        {   9,-1,-1,-1,-1, 9,-1, 9, 9,    -1 }, // 識別子
+        {   9, 9, 9, 9, 9, 9, 9, 9, 9,     9 }, // 終
     };
     // コンストラクタ
     public Token(String string) {
@@ -54,7 +56,7 @@ abstract class Token implements Comparable<Token> {
 class TokenFactory {
     public static Token newInstance(String string) {
         Token instance;
-        if(string.equals("`") || string.equals(";") || string.equals("="))
+        if(string.equals("`") || string.equals(";"))
             instance = new SpecialSymbol(string);
         else if(string.equals("+"))
             instance = new Sum(string);
@@ -68,6 +70,8 @@ class TokenFactory {
             instance = new LParen(string);
         else if(string.equals(")"))
             instance = new RParen(string);
+        else if(string.equals("="))
+            instance = new Equal(string);
         else if(string.matches("\\d+"))  // 数字の並びは整数定数
             instance = new IntConstant(string);
         else // 識別子(変数)
@@ -154,6 +158,14 @@ class RParen extends Token {
     }
 }
 
+// 等号
+class Equal extends Token {
+    public Equal(String string) {
+        super(string);
+        kind = EQUAL;
+    }
+}
+
 // 整数定数
 class IntConstant extends Token {
     private int value;
@@ -183,12 +195,16 @@ class Identifier extends Token {
 
 // プログラム本体
 class Calcurator {
+    // 変数の名前と値の組を格納する HashMap (値は整数限定)
+    private HashMap<String, Integer> symbolMap;
     public Calcurator() {
+        symbolMap = new HashMap<String, Integer>();
+
         System.out.println("式の値を求めます (Ctrl-d で終了)");
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(System.in));
         while(true) {
-            System.out.print("式を入力してください: ");
+            System.out.print("代入文を入力してください: ");
             String line = null;
             try {
                 line = reader.readLine();
@@ -209,8 +225,11 @@ class Calcurator {
             System.out.println();
             // 逆ポーランド記法の式の値を計算
             Integer value = calculate(reversePolishList);
-            // 式の値を表示
-            System.out.println("value: " + value);
+            /*
+            // 変数に代入
+            symbolMap.put(variableName, value);
+            System.out.println(" " + variableName + " <- " + value);
+            */
         }
     }
     // 入力された文字列からトークンのリストを生成
@@ -285,9 +304,29 @@ class Calcurator {
                 // 文字列から数値に変換して push
                 stack.push(((IntConstant)token).intValue());
             }
+            else if(token instanceof Equal) {
+                int operand2 = stack.pop();
+                int operand1 = stack.pop();
+                System.out.println(" 値を比較: " + operand1 + " = " + operand2);
+                if(operand1 == operand2) {
+                    System.out.println("true");
+                    System.exit(0);
+                }
+                else {
+                    System.out.println("false");
+                    System.exit(0);
+                }
+            }
             else { // 演算子でも数値でもないものは識別子
                 System.out.println(" 識別子: " + token.toString());
-                // いまのところ何もしない
+                // 値を HashMap から求めて push
+                if(symbolMap.containsKey(token.toString())) {
+                    Integer value = symbolMap.get(token.toString());
+                    stack.push(value);
+                }
+                else {
+                    System.err.println(" 未定義: " + token);
+                }
             }
         }
         // 最終的に stack には計算された値1つが入っている
