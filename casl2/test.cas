@@ -1,0 +1,10 @@
+TEST      START
+          LD      GR1, DATA1
+          LD      GR2, DATA2
+          ADDA    GR1, GR2
+          ST      GR1, RESULT
+          RET
+DATA1     DC      #FFFF
+DATA2     DC      #0001
+RESULT    DS      1
+          END

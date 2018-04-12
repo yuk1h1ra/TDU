@@ -1,0 +1,9 @@
+MAIN      START
+          LD      GR0, DAT
+          LAD     GR1, 1
+          ADDA    GR0, GR1
+          ST      GR0, ADA1
+          RET
+DAT       DC      #0002
+ADA1      DS      1
+          END
