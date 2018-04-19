@@ -1,9 +1,12 @@
-MAIN      START
-          LD      GR0, DAT
+SMPL2     START
+          LAD     GR0, #0001
           LAD     GR1, 1
-          ADDA    GR0, GR1
-          ST      GR0, ADA1
+          LD      GR2, DAT
+          LD      GR3, DAT, GR1
+          ADDA    GR2, GR3
+          ST      GR2, ADR1
           RET
 DAT       DC      #0002
-ADA1      DS      1
+          DC      #0003
+ADR1      DS      1
           END
